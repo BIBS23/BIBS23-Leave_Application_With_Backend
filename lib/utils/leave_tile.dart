@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sjcet_leave/modal_screen.dart';
+import 'package:sjcet_leave/screens/modal_screen.dart';
 
 class LeaveTile extends StatefulWidget {
   final String leaveImg;

@@ -1,16 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 class DetailsController extends ChangeNotifier {
-   String? docId;
- 
-  CollectionReference collectionRef =
-  FirebaseFirestore.instance.collection('details');
+  String? docId;
 
-  void getDetails(
-      String name, String branch, String rollno, String reason, String status) async{
-    DocumentReference docRef= await collectionRef.add({
+  CollectionReference collectionRef =
+      FirebaseFirestore.instance.collection('details');
+
+  void getDetails(String name, String branch, String rollno, String reason,
+      String status) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    DocumentReference docRef = await collectionRef.add({
+      'user': user!.uid,
       'name': name,
       'branch': branch,
       'rollno': rollno,
@@ -18,7 +21,7 @@ class DetailsController extends ChangeNotifier {
       'status': null,
       'leavetype': null
     });
-     docId = docRef.id;
+    docId = docRef.id;
 
     notifyListeners();
   }
@@ -30,8 +33,9 @@ class DetailsController extends ChangeNotifier {
   }
 
   void leaveType(String leavetype) {
-    if (docId != null) { 
+    if (docId != null) {
       collectionRef.doc(docId).update({'leavetype': leavetype});
+      notifyListeners();
     }
   }
 }

@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sjcet_leave/modal_screen.dart';
+import 'package:sjcet_leave/provider/signoutController.dart';
+import 'package:sjcet_leave/screens/modal_screen.dart';
 import 'package:sjcet_leave/provider/detailsControllers.dart';
 import 'package:sjcet_leave/utils/leave_tile.dart';
+import 'package:sjcet_leave/utils/mybtn.dart';
 
 import 'admin_page.dart';
 
@@ -22,13 +26,51 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           title: const Text('Leave Hive',
               style: TextStyle(fontSize: 16, letterSpacing: 6)),
+              automaticallyImplyLeading: false,
           centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: ((context) {
+                      return AlertDialog(
+                        title: const Text('Are you sure you want to leave ?'),
+                        content: Consumer<SignOutController>(
+                            builder: (context, signout, child) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              TextButton(
+                                  child: const Text('Yes'),
+                                  onPressed: () {
+                                    signout.signout();
+                                  }),
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('No'))
+                            ],
+                          );
+                        }),
+                      );
+                    }));
+              },
+              icon: const Icon(Icons.logout_outlined),
+            )
+          ],
         ),
         body: StreamBuilder<QuerySnapshot>(
-            stream:
-                FirebaseFirestore.instance.collection('details').snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('details')
+                .where('user',
+                    isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
-              if (!streamSnapshot.hasData) return const  CircularProgressIndicator();
+              if (!streamSnapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
               return Consumer<DetailsController>(
                   builder: (context, details, child) {
@@ -111,7 +153,8 @@ class _HomeState extends State<Home> {
                                   itemBuilder: (context, index) {
                                     final DocumentSnapshot documentSnapshot =
                                         streamSnapshot.data!.docs[index];
-                                       
+                                    final documentId = documentSnapshot.id;
+
                                     return Padding(
                                       padding: const EdgeInsets.only(
                                           top: 15, left: 15, right: 15),
